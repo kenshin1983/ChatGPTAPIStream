@@ -1,0 +1,15 @@
+{
+  "name": "chatgptapistream",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "gaoqing",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^3.2.1",
+    "ws": "^8.13.0"
+  }
+}
