@@ -31,7 +31,7 @@ wscat --connect ws://127.0.0.1:9010/chat/
 ```
 
 say any thing you want
-and it will reply message with stream model
+and it will reply message with stream mode
 
 ## Improve this project
 
