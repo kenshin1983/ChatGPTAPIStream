@@ -5,7 +5,7 @@ With this project, you can easily deploy a WebSocket server for engaging in a st
 
 If you find this project useful, please help us by giving it a star.
 
-## Newss
+## News
 
 - **2023-03-26**: project start
 
