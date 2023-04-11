@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import url from 'url'
 import { WebSocketServer } from 'ws';
 import { Configuration, OpenAIApi } from 'openai'
 
@@ -6,16 +7,11 @@ import { Configuration, OpenAIApi } from 'openai'
 dotenv.config();
 
 const PORT = process.env.PORT || 9010
-const configuration = new Configuration({
-    apiKey: process.env.API_KEY
-})
+
 
 const routes = {
     '/chat': chatModule
 }
-
-// init openai
-const openai = new OpenAIApi(configuration);
 
 // init websocket server
 const server = new WebSocketServer({ port: PORT });
@@ -26,11 +22,19 @@ server.on('connection', (ws, req) => {
 });
 
 // common
-function dispatcher(url, ws) {
-    if (routes[url]) {
-        (routes[url])(ws)
+function dispatcher(uri, ws) {
+    const location = url.parse(uri, true);
+    const key = location.query.token
+
+    if (routes[location.pathname] && key) {
+        // init openai
+        const configuration = new Configuration({
+            apiKey: key
+        })
+        const openai = new OpenAIApi(configuration);
+        (routes[location.pathname])(ws, openai)
     } else {
-        console.log('Unknown url: ', url)
+        console.log('Unknown path: ', location.pathname, ' key: ', key)
         ws.close()
     }
    
@@ -47,7 +51,7 @@ function getId() {
 // module
 // 消息体 { type, msgid, token, data }
 // type: ping / chat
-function chatModule(ws) {
+function chatModule(ws, openai) {
     ws.on('message', async (message) => {
         try {
             const json = JSON.parse(message.toString())
@@ -62,7 +66,7 @@ function chatModule(ws) {
                     break;
 
                 case 'chat':
-                    chatgptchat(json.data, (data) => {
+                    chatgptchat(json.data, openai, (data) => {
                         ws.send(result(0, 'OK', { msgid: getId(), content: JSON.parse(data)}));
                     })
                     break;
@@ -80,7 +84,7 @@ function chatModule(ws) {
     });
 }
 
-async function chatgptchat(messages, handleMessage) {
+async function chatgptchat(messages, openai, handleMessage) {
   try {
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
